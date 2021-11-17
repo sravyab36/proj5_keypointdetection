@@ -1,0 +1,331 @@
+<!DOCTYPE HTML>
+<!--
+	Prologue by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Facial Keypoint Detection </title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+	</head>
+	<body class="is-preload">
+
+
+		<!-- Main -->
+			<div id="main">
+
+				<!-- Intro -->
+					<section id="top" class="one dark cover">
+						<div class="container">
+
+							<header>
+								<h2 class="alt">PROJECT 5: Facial Keypoint Detection with Neural Networks </h2>
+								<p>Created by Sravya Basvapatri // CS 194-26 Fall 2021</p>
+								<!-- <a href="#" class="image fit"><img src="images/pic05.jpg" alt="" /></a> -->
+								
+							</header>
+						</div>
+					</section>
+
+				<!-- Portfolio -->
+					<section id="portfolio" class="two">
+						<div class="container">
+
+							<header>
+								<p>Hi! This project explores using Neural Networks to detect points on the human face. In Parts 1 and 2, I use the IMM Face Database, consisting of 40 individuals and 240 portraits, to train and predict key points on the face. Then, in Part 3, I will strengthen my approach with a larger database. </p>
+								<p> Here's what we'll get to in the end: automatically detecting key points to morph between images easily! </p>
+								<a href="#" class="image centered"><img src="images/morphing/sravya_aging_morph.gif" alt="100"  width = 200 /></a>
+								&nbsp;
+								<h3><a href="#hello"></a><u>Project Part 1: Nose Tip Detection</u></h3>
+								<h3><span style="color: #993366;">Data Loader Samples </span></h3>
+								<h3><span style="color: #993366;">Network Architecture </span></h3>
+								<h3><span style="color: #993366;">Varying Learning Rates</span></h3>
+								<h3><span style="color: #993366;">Varying Filter Size</span></h3>
+								<h3><span style="color: #993366;">Analyzing Results</span></h3>
+								
+								&nbsp;
+								<h3><u>Project Part 2: Full Face Detection</u></h3>
+								<h3><span style="color: #993366;">Data Loader Samples </span></h3>
+								<h3><span style="color: #993366;">Network Architecture and Losses </span></h3>
+								<h3><span style="color: #993366;">Improving the Model</span></h3>
+								<h3><span style="color: #993366;">Second Attempt Network Architecture + Analyzing Results</span></h3>
+								<h3><span style="color: #993366;">Third Time is the Charm + Analyzing Results</span></h3>
+								<h3><span style="color: #993366;">Visualizing Learned Filters</span></h3>
+								
+								&nbsp;
+								<h3><u>Part 3: Train With Larger Dataset</u></h3>
+								<h3><span style="color: #993366;">Network Architecture and Losses</span></h3>
+								<h3><span style="color: #993366;">Visualizing Results </span></h3>
+								<h3><span style="color: #993366;">Kaggle Test Set Results</span></h3>
+								<h3><span style="color: #993366;">Additional Sample Data</span></h3>
+								<h3><span style="color: #993366;">Bells and Whistles: Face Morphing Using Keypoints</span></h3>
+								
+								<p>Let's get started! </p>
+							</header>
+
+							<h2><span style="color: #333399;">Part 1: Nose Tip Detection </span></h2>
+							<p>To simplify the problem, I first start with predicting the location of the tip of the nose. The first 32 individuals and 6 views of each of their faces are used as my training set, and the remaining 8 are part of the validation set. This makes for 192 training images and 48 validation images. 
+								I approached the nose detection problem as a pixel coordinate regression problem. The input was a single grayscale image, and the output was a prediction of the nose tip position as an (x, y) coordinate. </p>
+							<h3>Data Loader Samples</h3>
+							<p>The first step to getting started was writing a dataloader to load in the data and apply the necessary transformations. 
+								Although the dataset provides 58 annotated keypoints, I only focused on the nose tip in this part. 
+							</p>
+							<a href="#" class="image fit"><img src="images/nose/visualizing_pre_transform.jpg" alt="300"  width = 100 /></a>
+							
+							<p> After loading in the images, I then applied the transformations necessary to send these inputs through a NN. All images were converted to grayscale. I also converted all image values to be floats between -0.5 and 0.5 to aid in training, and shrunk the portrait sizes down to 60 x 80. 
+								I also apply a contrast normalization to help take advantage of my full range of representation in my neural network. In my first attempts, I did no further data augmentation, but applied this normalization to both my training and validation sets.</p>
+							<a href="#" class="image fit"><img src="images/nose/visualizing_transformed.jpg" alt="300"  width = 100 /></a>
+							&nbsp;
+							<h3></a>Network Architecture</h3>
+							<p>The next step was writing the convolutional neural network that would hold the weight to predict the nose key points. My initial CNN has 3 convolutional layers and 2 fully connected layers, and follows the layout shown below.</p>
+							<a href="#" class="image fit"><img src="images/nose/CNN_nose.png" alt="100"  width = 200 /></a>
+							
+							<p>To train my CNN, I used MSE loss as my prediction loss, the Adam optimizer, a learning rate of 1e-3, and a batch size of 8. Given that each individual has 6 photos, this ensures that each batch has different faces in it, rather than simply photos of the same person. I ran the training loop through 25 epochs on the dataset. 
+								After this first run, I found the following training and validation error over time. The error is measured as the mean squared pixel error for a single image. The predictions and labels range from 0-1, so the error magnitude is quite small.</p>
+							<p><b>Ending validation loss:</b>  0.001350137870758772</p>
+							<p><b>Ending training loss:</b>  0.000536642287139936 </p>
+							<a href="#" class="image fit"><img src="images/nose/net1_nose_losses_0.001_8_25.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/nose/net1_nose_losses_semilog0.001_8_25.jpg" alt="100"  width = 200 /></a>
+							
+
+							Next, I visualized how these predictions looked on the faces. Below are the visualizations on the training and validation datasets, with ground truth in red and predictions in blue.
+							<a href="#" class="image fit"><img src="images/nose/net1_nose_train_0.001_8_25.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/nose/net1_nose_val_0.001_8_25.jpg" alt="100"  width = 200 /></a>
+							
+							&nbsp;
+							<h3>Varying Learning Rates</h3>
+							<p> I then played with some hyperparameters to see how they would affect the performance of my CNN and the losses during training.
+								I started with adjusting the learning rate. Especially looking at our log plots, we can see that the losses don't fall smoothly, but rather experience bumps. A smaller learning rate would help fix that.
+								However, using a learning rate of 1e-4 over 25 epochs, I found that the losses didn't come close to converging. In the semilog plot, we can see that the model still has room for improvement. However, we don't have the same unpredictable oscillations we saw with our first CNN's hyperparameters.
+							</p>
+							<p><b>Ending validation loss:</b>  0.004543898161500692</p>
+							<p><b>Ending training loss:</b>  0.002245608062366955 </p>
+							<a href="#" class="image fit"><img src="images/nose/nose_losses_0.0001_8_25.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/nose/nose_losses_semilog0.0001_8_25.jpg" alt="100"  width = 200 /></a>
+							
+							<a href="#" class="image fit"><img src="images/nose/nose_train_0.0001_8_25.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/nose/nose_val_0.0001_8_25.jpg" alt="100"  width = 200 /></a>
+							
+							<p>Reducing the learning rate didn't work well for this model, because I'm limiting training to just 25 epochs. Instead, I speculated that perhaps a higher learning rate decreased over time could help drive us to a solution.
+								To train my next model, I used a learning rate of 5e-3.
+							</p>
+							<p><b>Ending validation loss:</b> 0.0024231926072388887</p>
+							<p><b>Ending training loss:</b>  0.002317866001249058 </p>
+								<!-- Next, I tried adjusting the batch size. I thought a smaller batch size of 6 would generally be worse (because the same person's face is trained each time), but a larger batch size might see improvements. I felt that the training error converged too quickly (reaching 0.001 within 4 epochs), so I decreased the learning rate.</p> -->
+							<a href="#" class="image fit"><img src="images/nose/nose_losses_0.005_8_25.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/nose/nose_losses_semilog0.005_8_25.jpg" alt="100"  width = 200 /></a>
+							
+							And below are the results on some of the training and validation data.
+							<a href="#" class="image fit"><img src="images/nose/nose_train_0.005_8_25.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/nose/nose_val_0.005_8_25.jpg" alt="100"  width = 200 /></a>
+
+							<p>I found that this kept error about the same on validation set but reduced it on the training set as compared to a learning rate of 1e-3. 
+								The oscillations indicate that the learning rate may have been a bit too high, so I stuck with my initial model with a learning rate of 1e-3. 
+								I then tried varying other hyperparameters, including batch size. I speculated that a batch size of 6 would reduce performance because every batch is tuned on the same face, and found that a batch size of 8 worked best. </p>
+							
+							<h3>Varying Filter Size</h3>
+							<p> I also tried increasing the filter size. The following shows the new CNN with larger kernel sizes, trained over 25 epochs with a batch size of 8 and a learning rate of 1e-3. 
+							</p>
+							<p><b>Ending validation loss:</b> 0.001876991824246943</p>
+							<p><b>Ending training loss:</b>  0.0005328811172754891 </p>
+
+							<a href="#" class="image fit"><img src="images/nose/new_nose_CNN.png" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/nose/nose_losses_0.001_8_25.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/nose/nose_losses_semilog0.001_8_25.jpg" alt="100"  width = 200 /></a>
+			
+							<a href="#" class="image fit"><img src="images/nose/nose_train_0.001_8_25.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/nose/nose_val_0.001_8_25.jpg" alt="100"  width = 200 /></a>
+							
+							<p>I found that increasing the kernel size didn't have much of an effect on my training accuracy, although it did reduce prediction accuracy slightly. </p>
+
+								<p>First NN with 25 epochs & lr 1e-3:</p>
+								<p><b>Ending validation loss:</b>  0.001350137870758772</p>
+								<p><b>Ending training loss:</b>  0.000536642287139936 </p>
+								
+								<p>Larger Filter Size NN with 25 epochs & lr 1e-3 </p>
+								<p><b>Ending validation loss:</b> 0.001876991824246943</p>
+								<p><b>Ending training loss:</b>  0.0005328811172754891 </p>
+	
+								
+							<p>	Since the first NN performed better (confirmed by comparing the two sets of results by eye), I decided to use that first network to analyze peformance:</p>
+							<a href="#" class="image fit"><img src="images/nose/net1_nose_train_0.001_8_25.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/nose/net1_nose_val_0.001_8_25.jpg" alt="100"  width = 200 /></a>
+							&nbsp;
+
+							<h3>Analyzing Results</h3>
+							<p>Drawing from the test dataset, the network detects the nose tip almost perfectly for front-facing images and slight head rotations about the vertical axis. Below are two examples. </p>
+							<a href="#" class="image fit"><img src="images/nose/nose_good_examples.jpg" alt="100"  width = 200 /></a>
+
+							<p>For the following two images, the model doesn't perform nearly as well. I belive this this is because the face is angled differently in every side-profile image, such that the nose looks different.
+								In the both examples, the face is angled upward to reveal the nostrils. In the first image, we also have a significant shift leftward from the average location of the face in most of the images, which may have thrown the model off. 
+								Thus, more training data or data augmentation would help this be more accurate. </p>
+							<a href="#" class="image fit"><img src="images/nose/nose_poor_examples.jpg" alt="100"  width = 200 /></a>
+
+							<p>This part of the project was a really useful step to learn what effect tuning different hyperparameters has. The limit on training epochs allowed me to explore other ways of improving a model that isn't as time intensive, which is really critical when moving to larger datasets or more difficult prediction problems. </p>
+							&nbsp;
+
+							<h2><span style="color: #333399;">Part 2: Full Face Detection</span></h2>
+							<p> In this section we want to move forward and detect all 58 facial keypoints/landmarks.</p>
+							<h3>Data Loader Samples</h3>
+							<p> The first step I took was adding additional data augmentation. Our training set is pretty small-- just 192 images of 32 different people, so it is easier to memorize that training data and not generalize well beyond it. To combat this, I augmented the samples by adding a color jitter, random rotation, and random shift along with the normalizations from before. I also used a larger image size than before, rescaling images to 120 x 160. Below are the transformations visualized on sample data. </p>
+							<a href="#" class="image fit"><img src="images/all/chained_transforms.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/all/augmented_example.jpg" alt="100"  width = 200 /></a>
+							&nbsp;
+							<h3>Network Architecture and Losses</h3>
+							<p>I first tried the following CNN, similar to the one I used for nose keypoints but with additional convolutional and fully connected layers. </p>
+							<a href="#" class="image fit"><img src="images/all/V1all_CNN.png" alt="100"  width = 200 /></a>
+							
+							<p>In my training iteration below, I use a learning rate of 1e-3, a batch size of 8, and train over 400 epochs. The model trains in about 10 minutes locally. </p>
+							<a href="#" class="image fit"><img src="images/all/V1_error.png" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/all/V1_semilog.png" alt="100"  width = 200 /></a>
+							
+							<p>Below are predictions on training data, but it is clear that the model isn't able to successfully predict points even after 400 epochs.
+								I didn't include predictions on the validation set here because I first wanted to try to improve the model.
+							</p>
+							<a href="#" class="image fit"><img src="images/all/V1_train_visualization.png" alt="100"  width = 200 /></a>
+							&nbsp;
+							<h3>Improving the Model</h3>
+							<p>Next, I attempted training on just 1 image to see if the model had the capacity to learn the points. I trained for 400 epochs using the same hyperparameters as above, and here were the results. 
+								It does okay at predicting the points, but given just one image, I would have expected better accuracy. 
+							</p>
+							<a href="#" class="image fit"><img src="images/all/V1_single_face_verify_200epoch_lr1e-3dec_bs8_rot_jitter_noshift.png" alt="100"  width = 200 /></a>
+							&nbsp;
+							<h3>Second Attempt Network Architecture</h3>
+							<p>Seeing that my training error plateaus rather than reaching 0, I decided that my CNN likely didn't have the capability to hold all the weight it needed for facial keypoint prediction. I also saw that validation error plataued well above the training error, indicating that there are issues with overfitting to the training data still, but not being able to generalize to the test data.
+								At this point, I added an additional level of data augmentation by shifting images, and I decided to make my CNN bigger by adding larger layers.
+								Below is the second version of my CNN and its performance. I used a learning rate of 5e-3, a batch size of 16, and trained for 400 epochs. I also added some dropout to drive the error lower in case it was getting stuck in a local minimum.
+							</p>
+							<a href="#" class="image fit"><img src="images/all/v2_CNN.png" alt="100"  width = 200 /></a>
+							
+							<a href="#" class="image fit"><img src="images/all/v2_trvl_lr5e-3_bs16_400epoch.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/all/v2_log_trvl_lr5e-3_bs16_400epoch.jpg" alt="100"  width = 200 /></a>
+							<p>Below is the model's performance on the test and train data. I believe the model is learning to predict an average face, which must be a type of overfitting. To counter this, I experimented with more Normalizations and Dropouts. However, I didn't have much luck with this approach. </p>
+							<a href="#" class="image fit"><img src="images/all/v2_train_out_lr5e-3_bs16_400epoch.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/all/v2_test_out_lr5e-3_bs16_400epoch.jpg" alt="100"  width = 200 /></a>
+							&nbsp;
+							<h3>Analyzing Results</h3>
+							<p>Next, I analyzed why my model might be performing the way it is. From the above examples, the model does okay on the first training example (row 0 col 0), but not when the face is turned. I believe it does well on this image because the face is positioned in the center, close to where the average face is for most images. From the validation set, it does poorly on all the examples in the first row. I believe this is because the face for this person is a bit shifted from most of the examples in the training set. Similarly, the first two examples in the third row perform poorly, likely because the face is oriented differently than most of our training examples, slightly downwards.</p>
+							
+							<h3>Third Time is the Charm</h3>
+							<p>Following advice from OH, the internet, and from fellow students, I decided to shrink my network instead of enlarge it. The first two models seemed almost input-blind, predicting about an average face no matter what the input image was.  </p>
+							<p>	Under the assumption that the FC layers were making the model learn an "average face" rather than predict based on the image, I simplified my third model with a single fully connected layer.
+								For my data augmentations, I applied a random shift and a random rotation, as well as rescaled and normalized the images.
+							</p>
+							<a href="#" class="image fit"><img src="images/all/V3_CNN.png" alt="100"  width = 200 /></a>
+							<p> I trained for 100 epochs with a batch size of 16, and a learning rate of 1e-4. The smaller learning rate was intended to ensure that each iteration didn't sway the weight too much, which seemed to be the case when I visualized a single face being trained. </p>
+							<a href="#" class="image fit"><img src="images/all/V3_losses_0.0001_16_100.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/all/V3_losses_semilog_0.0001_16_100.jpg" alt="100"  width = 200 /></a>
+							<p>Below is the model's performance on the test and train data, which looks much better than the first two attempts. </p>
+							<a href="#" class="image fit"><img src="images/all/V3_train_0.0001_16_100.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/all/V3_val_0.0001_16_100.jpg" alt="100"  width = 200 /></a>
+							
+							&nbsp;
+							<h3>Analyzing Results</h3>
+							<p>Finally, I analyzed results from my final model. For the following two examples, the model does a good job of predicting, which I believe is because most of our training data is front facing. The model generally performs better on these front facing images. </p>
+							<a href="#" class="image fit"><img src="images/all/good_examples.jpg" alt="100"  width = 200 /></a>
+							<p>However, on the bottom two, the model doesn't perform nearly as well. I believe this might be due to a difference in lighting (especially for the left image), as well as a more drastic angle of the face. To improve this, adding a color/brightness jitter to the training set may help, as well as perhaps training more on the samples with turned faces. </p>
+							<a href="#" class="image fit"><img src="images/all/poor_examples.jpg" alt="100"  width = 200 /></a>
+							&nbsp;
+							
+							<h3>Visualizing Learned Filters</h3>
+							<p>Below, I visualized the filters from the convolutional layer 1 of my network. It consists of 1 in_channels and 32 out_channels, so the visualizations shows 32 5x5 kernels. </p>
+							<a href="#" class="image fit"><img src="images/all/visualized_filters_conv1 (1).jpg" alt="100"  width = 200 /></a>
+							
+						
+							&nbsp;
+							<h2><span style="color: #333399;">Part 3: Train With Larger Dataset</span></h2>
+							<p> In this last part, I moved to a larger training set and employed a pre-trained residual network, ResNet18. The first step was writing the dataloader, which had its challenges given some inconsistencies in the training set. The images were not all the same size as before, and the images were not portraits. 
+								Rather, the annotated faces in each image were in different places, with the location provided by a square bounding box.  Additionally, some of the annotated landmarks fell outside the bounding boxes, so my data cleaning needed to account for that by enlarging the bounding boxes such that parts of the image containing landmarks wouldn't be cropped out. 
+								Below is the data before transformations, but after the initial data cleaning. 
+							</p>
+							<a href="#" class="image fit"><img src="images/resnet/ibug_data_raw.jpg" alt="100"  width = 200 /></a>
+							<p> Next, I applied the same transforrms as in part 2 of the project, which are shown below on sample data from the ibug dataset. </p>
+							<a href="#" class="image fit"><img src="images/resnet/ibug_chained_transforms.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/resnet/ibug_data_transformed.jpg" alt="100"  width = 200 /></a>
+
+							<h3>Network Architecture and Losses</h3>
+							<p>For my network architecture, I started with the pre-trained resnet18 model, which is a residual neural network that passes information between multiple layers to improve predictions. 
+								After importing this model, I then needed to adjust the first convolutional layer to have a single input channel, since our keypoint detection takes in black and white images. I also adjusted the output fully connected layer to output 2 * 68  = 136 points to account for the 68 facial keypoints that we were trying to predict. 
+								I started with a learning rate of 1e-3 and trained for 10 epochs, like the staff solution. As before, I used MSE Loss and used Adam as my optimizer. Below is the resulting training and validation loss from this architecture. 
+							</p>
+							<a href="#" class="image fit"><img src="images/resnet/losses_0.001_128_10.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/resnet/losses_semilog_0.001_128_10.jpg" alt="100"  width = 200 /></a>
+							
+							&nbsp;
+							<h3>Visualizing Results</h3>
+							<p> I then plotted the results on some samples from the training and validation set, shown below. 
+								I was suprised by how well the validation set predicted, and how validation error was sometimes lower than the training error. However, at the end, I realized that this is likely because of the soemtimes drastic transforms and shifts applied to the training data that can take the points outside of the prediction range of the image.
+							</p>
+							<a href="#" class="image fit"><img src="images/resnet/train_0.001_128_10.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/resnet/val_0.001_128_10.jpg" alt="100"  width = 200 /></a>
+							
+							&nbsp;
+							<h3>Kaggle Test Set Results</h3>
+							<p> I also plotted results on some addition samples from the test set designed for the course Kaggle competition. Here is a visualization of those prediction, on the training size images, and then on the original size images. </p>
+							<a href="#" class="image fit"><img src="images/resnet/test_kaggle_predictions.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/resnet/test_kaggle_predictions_original_size.jpg" alt="100"  width = 200 /></a>
+							
+							<p>My model trained for 10 epochs acheived a score of 10.78117 on Kaggle, listed under "Sravya Basvapatri". </p>
+							&nbsp;
+							<h3> Additional Sample Data</h3>
+							<p> After, I wanted to see how the model would perform on my own images, so I loaded in the following 5 faces to attempt keypoint detection! 
+
+								Here are the results on those images. Since I didn't have bounding boxes for these images, I manually cropped them to limit the prediction to just the face.
+
+								I attempted this twice. In my first attempt, I found that the cropping was extremely important-- the model wasn't very good at predicting landmarks on faces that were even slightly zoomed out. In the second attempt, I zoomed in more, to reflect the zoom on the training data.
+							</p>
+							<a href="#" class="image fit"><img src="images/resnet/my_data_vis_no_transform.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/resnet/my_data_vis_v2.jpg" alt="100"  width = 200 /></a>
+
+							&nbsp;
+							<h3> Bells and Whistles: Face Morphing Using Keypoints </h3>
+							<p> Now that we have a network that automatically detects key points for us, it's much easier to do face morphing! I revisited my project 3 code to apply face morphing on some of the same and more images. As a reference, my project 3 code can be found here. </p>
+							<a href="https://inst.eecs.berkeley.edu/~cs194-26/fa21/upload/files/proj3/cs194-26-aci/">Project 3 Code</a>
+							&nbsp;
+							<p>I started by using the neural network to predict points. I needed to ensure that all images were square, grayscale inputs, but I could then map the keypoint locations back to do face morphing in color. 
+								Since we will be performing triangulation to morph the images, I also added additional points at the corners and edge midpoints of each image. This ensures that we're not just morphing the face. 
+							</p>
+							<p> Below, I display some examples of the triangulated predicted keypoints. </p>
+							<a href="#" class="image featured"><img src="images/morphing/sravya_gabbi_triangulation.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image featured"><img src="images/morphing/jacob_prangan_triangulation.jpg" alt="100"  width = 200 /></a>
+
+							<p> Next, here are some examples of the morphed images using NN predicted keypoints. They aren't quite as clean as the hand labelled predictions from project 3, but much much easier to make! </p>
+							<a href="#" class="image fit"><img src="images/morphing/sravya_gabbi_morph.jpg" alt="100"  width = 200 /></a>
+							<a href="#" class="image fit"><img src="images/morphing/jacob_prangan_morph.jpg" alt="100"  width = 200 /></a>
+
+							<p> Finally, here is a cool gif I created of myself over the years! </p>
+							<a href="#" class="image featured"><img src="images/morphing/sravya_aging_morph.gif" alt="100"  width = 200 /></a>
+
+							
+						</div>
+					</section>
+
+				<!-- About Me
+					<section id="about" class="three">
+						<div class="container">
+
+							<header>
+								<h2>What I Learned</h2>
+							</header>
+						</div>
+					</section> -->
+
+			</div>
+
+		<!-- Footer -->
+
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
